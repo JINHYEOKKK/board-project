@@ -20,11 +20,11 @@ public class PostResponseDto {
 
     private long memberId;
 
-    private long likeId;
-
     private String title;
 
     private String content;
+
+    private int likeCount;
 
     private int view;
 

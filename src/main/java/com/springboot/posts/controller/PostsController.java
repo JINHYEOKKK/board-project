@@ -22,7 +22,6 @@ import javax.validation.constraints.Positive;
 import java.net.URI;
 import java.util.List;
 
-
 @RestController
 @RequestMapping("/v1/posts")
 @Validated
@@ -78,8 +77,10 @@ public class PostsController {
 
     @GetMapping
     public ResponseEntity getPosts(@RequestParam @Positive int page,
-                                        @RequestParam @Positive int size) {
-        Page<Post> postPage = postService.findPosts(page, size);
+                                   @RequestParam @Positive int size,
+                                   @RequestParam String sort,
+                                   @RequestParam String standard) {
+        Page<Post> postPage = postService.findPosts(page -1, size, sort, standard);
         List<Post> posts = postPage.getContent();
 
         return new ResponseEntity(
@@ -87,5 +88,4 @@ public class PostsController {
                 HttpStatus.OK
         );
     }
-
 }

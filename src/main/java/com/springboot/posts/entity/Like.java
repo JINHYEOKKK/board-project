@@ -21,9 +21,10 @@ public class Like {
     @JoinColumn(name = "MEMBER_ID")
     private Member member;
 
-    @OneToOne(cascade = CascadeType.ALL)
+    @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "POST_ID")
     private Post post;
+
 
     @Column(nullable = false, unique = true)
     private LocalDateTime createdAt = LocalDateTime.now();
@@ -37,14 +38,14 @@ public class Like {
 
     public void setPost(Post post) {
         this.post = post;
-        if(post.getLike() != this) {
-            post.setLike(this);
+        if(post.getLikes().contains(this)) {
+            post.setLikes(this);
         }
     }
 
     public void removePost(Post post) {
         this.post = null;
-        if(post.getLike() == this) {
+        if(post.getLikes().contains(this)) {
             post.removeLike(this);
         }
     }

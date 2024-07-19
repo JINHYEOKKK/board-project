@@ -29,10 +29,14 @@ public interface PostMapper {
         postResponseDto.setTitle(post.getTitle());
         postResponseDto.setContent(post.getContent());
 //        postResponseDto.setView(post.getView());
-        postResponseDto.setLikeId(post.getLike().getLikeId());
+        postResponseDto.setLikeCount(post.getLikeCount());
         postResponseDto.setCreatedAt(post.getCreatedAt());
         postResponseDto.setModifiedAt(post.getModifiedAt());
-        postResponseDto.setPostStatus(post.getPostStatus());
+        if(post.getComments().isEmpty()) {
+            postResponseDto.setPostStatus(post.getPostStatus());
+        }else {
+            postResponseDto.setPostStatus(Post.PostStatus.POST_QUESTION_ANSWERED);
+        }
 
         List<CommentResponseDto> commentResponseDtoList = post.getComments().stream()
                 .map(comment -> {

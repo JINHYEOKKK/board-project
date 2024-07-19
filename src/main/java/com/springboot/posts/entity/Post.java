@@ -27,27 +27,23 @@ public class Post {
     @JsonManagedReference
     private List<Comment> comments = new ArrayList<>();
 
-    // 부모엔터티에 @JsonManagedReference 애너테이션을 붙혀 밑 set 메서드 생략가능
-//    public void setComment(Comment comment) {
-//        comments.add(comment);
-//        if(comment.getPost() != this){
-//            comment.setPost(this);
-//        }
-//    }
-
     @ManyToOne
     @JoinColumn(name = "MEMBER_ID") // 외래ㅣ
     private Member member;
 
-//    @OneToOne(mappedBy = "post")
+    @Column
+    private int likeCount = 0;
+
+    //
+    // 내부 if : view에서 view에 있는 post를 가져와 이 필드에 있는 값들이 있는지 확인. 없다면 추가
+    // 외부 if : 만약 view 가 null이 아니라면 참이므로 내부 if문이 실행
+
+    @OneToMany(mappedBy = "post", cascade = CascadeType.MERGE)
+    private List<Like> likes = new ArrayList<>();
+
+    //    @OneToOne(mappedBy = "post")
 //    private View view;
 
-    @OneToOne(mappedBy = "post", cascade = CascadeType.MERGE)
-    private Like like;
-
-    // 외부 if : 만약 view 가 null이 아니라면 참이므로 내부 if문이 실행
-    // 내부 if : view에서 view에 있는 post를 가져와 이 필드에 있는 값들이 있는지 확인. 없다면 추가
-    //
 //    public void setView(View view) {
 //        if(view != null) {
 //            if(view.getPost() != this) {
@@ -57,23 +53,13 @@ public class Post {
 //        }
 //    }
 
-    public void setLike(Like like) {
-        if(like != null) {
-            if(like.getPost() != this) {
-                like.setPost(this);
-            }
-            this.like = like;
+    public void setLikes(Like like) {
+        if(this.likes.contains(like)) {
+            return;
         }
+        likes.add(like);
+        like.setPost(this);
     }
-
-//    @OneToMany(mappedBy = "post")
-//    private View view;
-
-//    @OneToMany(mappedBy = "post")
-//    private Like like;
-//
-//    @OneToMany(mappedBy = "post")
-//    private DisLike disLike;
 
     @Enumerated(EnumType.STRING)
     private PostStatus postStatus = PostStatus.POST_QUESTION_REGISTERED;
@@ -108,11 +94,17 @@ public class Post {
     }
 
     public void removeLike(Like like) {
-        this.like = null;
+        this.likes = null;
         if(like.getPost() == this){
             like.removePost(this);
         }
-
     }
 
+    public void incrementLikeCount() {
+        this.likeCount++;
+    }
+
+    public void decrementLikeCount() {
+        this.likeCount--;
+    }
 }

@@ -13,6 +13,7 @@ import com.springboot.posts.repository.PostRepository;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
@@ -61,15 +62,10 @@ public class PostService {
         return post;
     }
 
-//    public void createView(Post post) {
-//        post.setView(new View());
-//
-//        postRepository.save(post);
-//    }
+    public Page<Post> findPosts(int page, int size, String sort, String standard) {
+        Pageable pageable = createPageable(page, size, sort, standard);
 
-    public Page<Post> findPosts(int page, int size) {
-        return postRepository.findAll(PageRequest.of(page - 1, size,
-                Sort.by("postId").descending()));
+        return postRepository.findByPostStatusNotAndPostStatusNot(pageable, Post.PostStatus.POST_QUESTION_DELETED, Post.PostStatus.POST_QUESTION_DEACTIVATED);
     }
 
     private Post findVerifiedPost(long postId) {
@@ -94,19 +90,29 @@ public class PostService {
 
         // 위코드는 post 레포지토리를 주입받아 메서드를 사용하여 id 를 찾았고, 이 코드는
         Member member = memberService.findVerifiedMember(like.getMember().getMemberId());
-
         Optional<Like> optionalLike = likeRepository.findByPostAndMember(post, member);
 
         if (optionalLike.isPresent()) {
             Like findLike = optionalLike.orElseThrow(() -> new BusinessLogicException(ExceptionCode.MEMBER_NOT_FOUND));
+            findLike.getPost().decrementLikeCount();
             findLike.removePost(post);
             findLike.removeMember(member);
             likeRepository.delete(findLike);
         } else {
             Like addLike = new Like();
             addLike.setPost(post);
+            addLike.getPost().incrementLikeCount();
             addLike.setMember(member);
             likeRepository.save(addLike);
+        }
+    }
+    // standard 컬럼명
+    private Pageable createPageable(int page, int size, String sort, String standard) {
+        if(sort.equals("DESC")) {
+            return PageRequest.of(page, size, Sort.by(standard).descending());
+//            return PageRequest.of(page, size, Sort.Direction.DESC,standard);
+        }else {
+            return PageRequest.of(page, size, Sort.by(standard).ascending());
         }
     }
 }
