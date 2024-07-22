@@ -8,9 +8,11 @@ import com.springboot.member.service.MemberService;
 import com.springboot.posts.entity.Like;
 import com.springboot.posts.entity.Post;
 
+import com.springboot.posts.entity.View;
 import com.springboot.posts.repository.LikeRepository;
 import com.springboot.posts.repository.PostRepository;
 
+import com.springboot.posts.repository.ViewRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -25,14 +27,14 @@ import java.util.Optional;
 public class PostService {
     private final PostRepository postRepository;
     private final LikeRepository likeRepository;
-    private final MemberRepository memberRepository;
     private final MemberService memberService;
+    private final ViewRepository viewRepository;
 
-    public PostService(PostRepository postRepository, LikeRepository likeRepository, MemberRepository memberRepository, MemberService memberService) {
+    public PostService(PostRepository postRepository, LikeRepository likeRepository, MemberService memberService, ViewRepository viewRepository) {
         this.postRepository = postRepository;
         this.likeRepository = likeRepository;
-        this.memberRepository = memberRepository;
         this.memberService = memberService;
+        this.viewRepository = viewRepository;
     }
 
     public Post createPost(Post post) {
@@ -55,11 +57,28 @@ public class PostService {
     }
 
     public Post findPost(long postId) {
-        Post post = findVerifiedPost(postId);
-        if(post.getPostStatus().equals(Post.PostStatus.POST_QUESTION_DEACTIVATED)) {
+        Optional<Post> optionalPost = postRepository.findById(postId);
+
+        Post findPost = optionalPost.orElseThrow(() -> new BusinessLogicException(ExceptionCode.POST_NOT_EXISTS));
+
+        if(findPost.getPostStatus().equals(Post.PostStatus.POST_QUESTION_DEACTIVATED)) {
             throw new BusinessLogicException(ExceptionCode.POST_NOT_EXISTS);
         }
-        return post;
+
+        Member findMember = memberService.findVerifiedMember(findPost.getMember().getMemberId());
+
+        Optional<View> optionalView = viewRepository.findByMemberAndPost(findMember,findPost);
+
+        if (optionalView.isPresent()){
+            return findPost;
+        } else {
+            View addView = new View();
+            addView.setPost(findPost);
+            addView.setMember(findMember);
+            addView.getPost().incrementViewCount();
+            viewRepository.save(addView);
+        }
+        return findPost;
     }
 
     public Page<Post> findPosts(int page, int size, String sort, String standard) {
@@ -84,6 +103,23 @@ public class PostService {
         }
     }
 
+//    public void toggleView(View view) {
+//        Post post = findPost(view.getPost().getPostId());
+//        Member member = memberService.findVerifiedMember(view.getMember().getMemberId());
+//
+//        Optional<View> optionalView = viewRepository.findByMemberAndPost(member, post);
+//
+//        if (optionalView.isPresent()) {
+//            return;
+//        } else {
+//            View addView = new View();
+//            addView.setPost(post);
+//            addView.getPost().incrementViewCount();
+//            addView.setMember(member);
+//            viewRepository.save(addView);
+//        }
+//    }
+
     public void toggleLike(Like like) {
         Post post = postRepository.findById(like.getPost().getPostId())
                 .orElseThrow(() -> new BusinessLogicException(ExceptionCode.POST_NOT_EXISTS));
@@ -106,7 +142,8 @@ public class PostService {
             likeRepository.save(addLike);
         }
     }
-    // standard 컬럼명
+    // standard: 어떤 컬럼명 기준으로
+    // sort:어떤 방식의 정렬
     private Pageable createPageable(int page, int size, String sort, String standard) {
         if(sort.equals("DESC")) {
             return PageRequest.of(page, size, Sort.by(standard).descending());

@@ -28,8 +28,8 @@ public interface PostMapper {
         postResponseDto.setMemberId(post.getMember().getMemberId());
         postResponseDto.setTitle(post.getTitle());
         postResponseDto.setContent(post.getContent());
-//        postResponseDto.setView(post.getView());
         postResponseDto.setLikeCount(post.getLikeCount());
+        postResponseDto.setViewCount(post.getViewCount());
         postResponseDto.setCreatedAt(post.getCreatedAt());
         postResponseDto.setModifiedAt(post.getModifiedAt());
         if(post.getComments().isEmpty()) {

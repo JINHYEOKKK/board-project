@@ -38,7 +38,7 @@ public class Like {
 
     public void setPost(Post post) {
         this.post = post;
-        if(post.getLikes().contains(this)) {
+        if (!post.getLikes().contains(this)) {
             post.setLikes(this);
         }
     }
@@ -56,6 +56,4 @@ public class Like {
             member.removeLike(this);
         }
     }
-
-
 }

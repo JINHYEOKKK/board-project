@@ -26,7 +26,7 @@ public class PostResponseDto {
 
     private int likeCount;
 
-    private int view;
+    private int viewCount;
 
     private List<CommentResponseDto> comments;
 

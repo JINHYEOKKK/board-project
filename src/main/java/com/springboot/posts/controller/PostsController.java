@@ -5,6 +5,7 @@ import com.springboot.posts.dto.PostPatchDto;
 import com.springboot.posts.dto.PostPostDto;
 import com.springboot.posts.entity.Like;
 import com.springboot.posts.entity.Post;
+import com.springboot.posts.entity.View;
 import com.springboot.posts.mapper.LikeMapper;
 import com.springboot.posts.mapper.PostMapper;
 import com.springboot.posts.service.PostService;
@@ -49,6 +50,7 @@ public class PostsController {
     public ResponseEntity postLike(@PathVariable @Positive long postId,
                                    @RequestBody @Valid LikeDto.Post requestBody) {
         requestBody.setPostId(postId);
+
         postService.toggleLike(likeMapper.likePostDtoToLike(requestBody));
 
         return new ResponseEntity<>(HttpStatus.OK);
@@ -70,6 +72,7 @@ public class PostsController {
     @GetMapping("/{post-id}")
     public ResponseEntity getPost(@PathVariable("post-id") @Positive long postId){
         Post post = postService.findPost(postId);
+
         return new ResponseEntity<>(
                 new SingleResponseDto<>(postMapper.postCommentToPostResponseDto(post)),
         HttpStatus.OK);

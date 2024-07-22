@@ -5,6 +5,7 @@ import com.springboot.comment.entity.Comment;
 import com.springboot.posts.entity.Like;
 import com.springboot.posts.entity.Post;
 
+import com.springboot.posts.entity.View;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -27,34 +28,26 @@ public class Member {
     @JsonManagedReference
     private List<Comment> comments = new ArrayList<>();
 
-    public void setComment(Comment comment) {
-        comments.add(comment);
-        if(comment.getMember() != this) {
-            comment.setMember(this);
-        }
-    }
-
     @OneToMany(mappedBy = "member")
     private List<Post> posts = new ArrayList<>();
 
     @Column(nullable = false)
     private String name;
 
-//    @OneToMany(mappedBy = "member")
-//    private List<View> views = new ArrayList<>();
-
     @OneToMany(mappedBy = "member")
     private List<Like> likes = new ArrayList<>();
 
-//    public void setView(View view) {
-//        if(view.getMember() != this) {
-//            view.setMember(this);
-//        }
-//        this.views.add(view);
-//    }
+    @OneToMany(mappedBy = "member")
+    private List<View> views = new ArrayList<>();
 
     @Column(nullable = false, unique = true)
     private String email;
+
+    @Column(length = 100, nullable = false) // 추가
+    private String password;
+
+    @ElementCollection(fetch = FetchType.EAGER) // 추가
+    private List<String> roles = new ArrayList<>();
 
     @Column(nullable = false, unique = true)
     private String phone;
@@ -89,4 +82,17 @@ public class Member {
         }
     }
 
+    public void setView(View view) {
+        this.views.add(view);
+        if(view.getMember() != this) {
+            view.setMember(this);
+        }
+    }
+
+    public void setComment(Comment comment) {
+        comments.add(comment);
+        if(comment.getMember() != this) {
+            comment.setMember(this);
+        }
+    }
 }

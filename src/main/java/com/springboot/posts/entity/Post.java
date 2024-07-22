@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import javax.persistence.*;
+
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -28,37 +29,35 @@ public class Post {
     private List<Comment> comments = new ArrayList<>();
 
     @ManyToOne
-    @JoinColumn(name = "MEMBER_ID") // 외래ㅣ
+    @JoinColumn(name = "MEMBER_ID") // 외래키 join 컬럼을 하는 이유는 Post 테이블에 MEMBER_ID 라는 컬럼을 직접 가지기 위해
     private Member member;
 
     @Column
     private int likeCount = 0;
 
-    //
-    // 내부 if : view에서 view에 있는 post를 가져와 이 필드에 있는 값들이 있는지 확인. 없다면 추가
-    // 외부 if : 만약 view 가 null이 아니라면 참이므로 내부 if문이 실행
+    @Column
+    private int viewCount = 0;
 
     @OneToMany(mappedBy = "post", cascade = CascadeType.MERGE)
     private List<Like> likes = new ArrayList<>();
 
-    //    @OneToOne(mappedBy = "post")
-//    private View view;
+    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL)
+    private List<View> views = new ArrayList<>();
 
-//    public void setView(View view) {
-//        if(view != null) {
-//            if(view.getPost() != this) {
-//                view.setPost(this);
-//            }
-//            this.view = view;
-//        }
-//    }
+    // Post 에 있는 views 는 매개변수로 오는 view로 세팅
+    // 만약 매개변수 view 의 post를 가져와서 확인했는데, 데이터가 이 post가 아니라면, view의 post를 여기이 post로 세팅해준다.
+    public void setView(View view) {
+        this.views.add(view);
+       if (view.getPost() != this) {
+           view.setPost(this);
+       }
+    }
 
     public void setLikes(Like like) {
-        if(this.likes.contains(like)) {
-            return;
+        this.likes.add(like);
+        if (like.getPost() != this) {
+            like.setPost(this);
         }
-        likes.add(like);
-        like.setPost(this);
     }
 
     @Enumerated(EnumType.STRING)
@@ -100,11 +99,17 @@ public class Post {
         }
     }
 
+    // like 를 증가시켜주는 메서드
     public void incrementLikeCount() {
         this.likeCount++;
     }
 
+    // like 를 취소 시켜주는 메서드
     public void decrementLikeCount() {
         this.likeCount--;
+    }
+
+    public void incrementViewCount() {
+        this.viewCount++;
     }
 }
